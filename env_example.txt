@@ -1,0 +1,54 @@
+# Configurações do Django
+SECRET_KEY=django-insecure-^7*=-ck&w6@6nt!x10-o#&8d#^l7y0sv2mv%+$!-4%1l0#7y_#
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1,testserver
+
+# Configurações do Banco de Dados
+DATABASE_ENGINE=django.db.backends.sqlite3
+DATABASE_NAME=db.sqlite3
+
+# Configurações de Email (para produção)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=seu-email@gmail.com
+EMAIL_HOST_PASSWORD=sua-senha-de-app
+
+# Configurações de Segurança
+CSRF_TRUSTED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173
+
+# Configurações de CORS
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173
+
+# Configurações de Upload
+MAX_UPLOAD_SIZE=5242880
+ALLOWED_IMAGE_TYPES=jpg,jpeg,png,gif
+
+# Configurações de Senha
+PASSWORD_MIN_LENGTH=8
+PASSWORD_REQUIRE_UPPERCASE=True
+PASSWORD_REQUIRE_LOWERCASE=True
+PASSWORD_REQUIRE_NUMBERS=True
+PASSWORD_REQUIRE_SPECIAL=True
+
+# Configurações de Sessão
+SESSION_COOKIE_AGE=3600
+SESSION_COOKIE_SECURE=False
+CSRF_COOKIE_SECURE=False
+
+# Configurações de Log
+LOG_LEVEL=INFO
+LOG_FILE=logs/django.log
+
+# Configurações de Cache (para produção)
+CACHE_BACKEND=django.core.cache.backends.locmem.LocMemCache
+CACHE_LOCATION=unique-snowflake
+
+# Configurações de API
+API_RATE_LIMIT=100
+API_RATE_LIMIT_PERIOD=3600
+
+# Configurações de Backup
+BACKUP_ENABLED=False
+BACKUP_PATH=backups/
+BACKUP_RETENTION_DAYS=30
