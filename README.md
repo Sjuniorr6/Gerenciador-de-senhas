@@ -1,10 +1,10 @@
 # 🔐 Sistema de Gerenciamento de Usuários Hierárquico
 
-Sistema Django completo para gerenciamento de usuários com hierarquia de contas, APIs REST e integração com React.
+Sistema Django completo para gerenciamento de usuários com hierarquia de contas, APIs REST, autenticação e integração com React.
 
-## ✅ **Status: 100% Pronto para React**
+## ✅ **Status: 100% Pronto para React com Autenticação**
 
-O sistema está **perfeitamente configurado** para trabalhar com React! Todas as APIs estão funcionando e testadas.
+O sistema está **perfeitamente configurado** para trabalhar com React! Todas as APIs estão funcionando, protegidas e testadas.
 
 ## 🚀 **Início Rápido**
 
@@ -26,13 +26,45 @@ python manage.py runserver
 # Servidor rodando em: http://localhost:8000
 ```
 
-### 3. **Testar APIs**
+### 3. **Testar Autenticação**
 ```bash
-# Listar usuários
-curl http://localhost:8000/api/usuarios/
+# Testar login
+curl -X POST http://localhost:8000/api/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@demo.com","senha":"Admin123!"}'
 
-# Validar senha
-curl http://localhost:8000/api/validar-senha/?senha=Senha123!
+# Testar API protegida (sem login)
+curl http://localhost:8000/api/usuarios/
+# Deve retornar 401 - Usuário não autenticado
+```
+
+## 🔐 **Sistema de Autenticação**
+
+### **Funcionalidades Implementadas**
+- ✅ **Autenticação por Sessão** com cookies
+- ✅ **Middleware automático** para verificar login
+- ✅ **Rate Limiting** (100 requisições/hora)
+- ✅ **Logs automáticos** de todas as requisições
+- ✅ **Proteção de rotas** automática
+- ✅ **APIs públicas e protegidas**
+
+### **APIs Públicas (sem login)**
+```javascript
+POST /api/login/              // Login
+POST /api/criar-admin-inicial/ // Criar primeiro admin
+GET  /api/validar-senha/       // Validar senha
+```
+
+### **APIs Protegidas (precisam de login)**
+```javascript
+GET    /api/usuarios/          // Listar usuários
+POST   /api/usuarios/          // Criar usuário
+GET    /api/usuarios/{id}/     // Ver usuário
+PUT    /api/usuarios/{id}/     // Atualizar usuário
+DELETE /api/usuarios/{id}/     // Deletar usuário
+POST   /api/usuarios/{id}/alterar-senha/ // Alterar senha
+GET    /api/subcontas/         // Listar subcontas
+POST   /api/logout/            // Logout
 ```
 
 ## 🎯 **Funcionalidades Principais**
@@ -56,6 +88,8 @@ curl http://localhost:8000/api/validar-senha/?senha=Senha123!
 - ✅ **CORS configurado** para React
 - ✅ **CSRF protection** ativo
 - ✅ **Variáveis de ambiente** protegidas
+- ✅ **Rate limiting** automático
+- ✅ **Logs de acesso** completos
 
 ## 🔧 **Configuração para React**
 
@@ -70,28 +104,15 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 ```
 
-### **APIs Disponíveis**
+### **Configuração Axios no React**
 ```javascript
-const API_BASE = 'http://localhost:8000/api';
-
-// Autenticação
-POST   /api/login/
-POST   /api/logout/
-POST   /api/criar-admin-inicial/
-
-// Usuários
-GET    /api/usuarios/
-POST   /api/usuarios/
-GET    /api/usuarios/{id}/
-PUT    /api/usuarios/{id}/
-DELETE /api/usuarios/{id}/
-
-// Senhas
-POST   /api/usuarios/{id}/alterar-senha/
-POST   /api/validar-senha/
-
-// Subcontas
-GET    /api/subcontas/
+const api = axios.create({
+  baseURL: 'http://localhost:8000/api',
+  withCredentials: true, // IMPORTANTE para cookies
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
 ```
 
 ## 📊 **Dados de Teste**
@@ -126,16 +147,25 @@ python manage.py test usuarios.tests -v 2
 python demo_system.py
 ```
 
-### **Testes Específicos**
+### **Testar Autenticação**
 ```bash
-# Testes de modelo
-python manage.py test usuarios.tests.UsuarioModelTest -v 2
+# Testar login
+curl -X POST http://localhost:8000/api/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@demo.com","senha":"Admin123!"}'
 
-# Testes de API
-python manage.py test usuarios.tests.APITest -v 2
+# Testar API protegida (sem login)
+curl http://localhost:8000/api/usuarios/
+# Deve retornar 401
 
-# Testes de formulários
-python manage.py test usuarios.tests.UsuarioFormTest -v 2
+# Testar API protegida (com login)
+curl -X POST http://localhost:8000/api/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@demo.com","senha":"Admin123!"}' \
+  -c cookies.txt
+
+curl http://localhost:8000/api/usuarios/ -b cookies.txt
+# Deve retornar lista de usuários
 ```
 
 ## 📁 **Estrutura do Projeto**
@@ -148,7 +178,8 @@ senhas/
 ├── usuarios/            # App principal
 │   ├── models.py        # Modelo Usuario
 │   ├── views.py         # Views tradicionais
-│   ├── api_views.py     # APIs REST
+│   ├── api_views.py     # APIs REST (PROTEGIDAS)
+│   ├── middleware.py    # Middleware de autenticação
 │   ├── forms.py         # Formulários
 │   ├── tests.py         # Testes unitários
 │   └── urls.py          # URLs do app
@@ -175,6 +206,8 @@ senhas/
 - ✅ **ALLOWED_HOSTS** configurado
 - ✅ **HTTPS** recomendado para produção
 - ✅ **Backup automático** configurado
+- ✅ **Rate limiting** ativo
+- ✅ **Logs de acesso** completos
 
 ## 🚀 **Deploy em Produção**
 
@@ -201,6 +234,7 @@ pip install gunicorn
 ## 📚 **Documentação**
 
 - 📖 **[REACT_INTEGRATION.md](REACT_INTEGRATION.md)** - Guia completo para React
+- 🔐 **[REACT_AUTH_GUIDE.md](REACT_AUTH_GUIDE.md)** - Guia de autenticação para React
 - 🔒 **[SECURITY.md](SECURITY.md)** - Guia de segurança
 - 📋 **[TESTES_RESUMO.md](TESTES_RESUMO.md)** - Resumo dos testes
 - 📖 **[API_DOCS.md](API_DOCS.md)** - Documentação das APIs
@@ -209,11 +243,11 @@ pip install gunicorn
 
 O sistema está **100% funcional** e pronto para:
 
-1. ✅ **Desenvolvimento com React**
-2. ✅ **Deploy em produção**
-3. ✅ **Gerenciamento hierárquico de usuários**
-4. ✅ **APIs REST completas**
-5. ✅ **Segurança implementada**
+1. ✅ **Desenvolvimento com React** (com autenticação completa)
+2. ✅ **Deploy em produção** (com segurança)
+3. ✅ **Gerenciamento hierárquico** de usuários
+4. ✅ **APIs REST protegidas** e funcionais
+5. ✅ **Autenticação automática** em todas as rotas
 
 **Próximo passo:** Criar seu projeto React e começar a desenvolver! 🚀
 

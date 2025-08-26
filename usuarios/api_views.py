@@ -3,14 +3,73 @@ from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from functools import wraps
 from .models import Usuario
 from .views import _validar_senha
 from django.contrib.auth.hashers import make_password
 import json
 
 
+# Decorator para verificar se usuário está logado
+def require_login(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        usuario_id = request.session.get('usuario_logado_id')
+        if not usuario_id:
+            return JsonResponse({
+                'error': 'Usuário não autenticado',
+                'message': 'Faça login para acessar este recurso'
+            }, status=401)
+        
+        try:
+            usuario = Usuario.objects.get(id=usuario_id, ativo=True)
+            request.usuario_logado = usuario
+        except Usuario.DoesNotExist:
+            request.session.flush()
+            return JsonResponse({
+                'error': 'Sessão inválida',
+                'message': 'Usuário não encontrado ou inativo'
+            }, status=401)
+        
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+# Decorator para verificar permissões
+def require_permission(permission_type):
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            if not hasattr(request, 'usuario_logado'):
+                return JsonResponse({
+                    'error': 'Usuário não autenticado'
+                }, status=401)
+            
+            usuario = request.usuario_logado
+            
+            if permission_type == 'admin' and usuario.tipo != 'admin':
+                return JsonResponse({
+                    'error': 'Acesso negado',
+                    'message': 'Apenas administradores podem acessar este recurso'
+                }, status=403)
+            
+            elif permission_type == 'gerente' and usuario.tipo not in ['admin', 'gerente']:
+                return JsonResponse({
+                    'error': 'Acesso negado',
+                    'message': 'Apenas gerentes e administradores podem acessar este recurso'
+                }, status=403)
+            
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
 @api_view(['GET', 'POST'])
 @parser_classes([JSONParser, MultiPartParser, FormParser])
+@require_login
 def usuario_list_create(request):
     """
     Lista todos os usuários ou cria um novo usuário
@@ -120,6 +179,7 @@ def usuario_list_create(request):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @parser_classes([JSONParser, MultiPartParser, FormParser])
+@require_login
 def usuario_detail(request, pk):
     """
     Retorna, atualiza ou deleta um usuário específico
@@ -274,6 +334,7 @@ def logout_api(request):
 
 
 @api_view(['GET'])
+@require_login
 def subcontas_api(request):
     """
     Lista subcontas do usuário logado
