@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'usuarios',
+    'steam',
 ]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
