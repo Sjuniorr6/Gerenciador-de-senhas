@@ -3,5 +3,3 @@ djangorestframework==3.16.1
 django-cors-headers==4.7.0
 python-dotenv==1.1.1
 Pillow==10.3.0
-
-#teste de commit
